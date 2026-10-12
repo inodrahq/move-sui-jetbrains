@@ -116,8 +116,8 @@ intellijPlatform {
     pluginVerification {
         ides {
             // Two builds keep the verifier within a CI runner's disk; `recommended()` would add every point release.
-            ide(org.jetbrains.intellij.platform.gradle.IntelliJPlatformType.IntellijIdea, providers.gradleProperty("platformVersion").get())
-            ide(org.jetbrains.intellij.platform.gradle.IntelliJPlatformType.IntellijIdea, "2026.2.3")
+            create(org.jetbrains.intellij.platform.gradle.IntelliJPlatformType.IntellijIdea, providers.gradleProperty("platformVersion").get())
+            create(org.jetbrains.intellij.platform.gradle.IntelliJPlatformType.IntellijIdea, "2026.2.3")
         }
     }
 }

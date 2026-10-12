@@ -26,6 +26,9 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/MystenLabs/suiup/main/install.sh | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           "$HOME/.local/bin/suiup" install sui@testnet -y
+      - name: Warm the Move dependency cache
+        # Clones the Sui framework into ~/.move once, outside the test JVM, so tests do not pay for it.
+        run: cd src/test/testData/counter-package && sui move build && sui move test --trace --disassemble && rm -rf build traces
       - name: Build and test
         run: ./gradlew build --no-daemon
       - uses: actions/upload-artifact@v4

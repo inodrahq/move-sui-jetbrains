@@ -19,9 +19,10 @@ class MoveTraceAdapterTest : BasePlatformTestCase() {
         // A pristine copy of the counter package; traces embed source hashes, so they are generated here.
         val pkg = java.nio.file.Files.createTempDirectory("move-trace-test").toRealPath().toFile()
         com.intellij.openapi.util.io.FileUtil.copyDir(File("src/test/testData/counter-package"), pkg)
-        val out = com.intellij.execution.process.CapturingProcessHandler(sui.commandLine("move", "test", "--trace", "--disassemble", workDir = pkg.toPath())).runProcess(300_000)
+        // First run on a clean machine also clones the Sui framework into ~/.move, which can take minutes.
+        val out = com.intellij.execution.process.CapturingProcessHandler(sui.commandLine("move", "test", "--trace", "--disassemble", workDir = pkg.toPath())).runProcess(900_000)
         val trace = File(pkg, "traces/counter__counter_tests__test_increment.json.zst")
-        assertTrue("trace generation failed: ${out.stderr}", trace.isFile)
+        assertTrue("trace generation failed (timeout=${out.isTimeout}, exit=${out.exitCode})\nstdout: ${out.stdout.takeLast(1500)}\nstderr: ${out.stderr.takeLast(1500)}", trace.isFile)
         val stopped = java.util.concurrent.LinkedBlockingQueue<StoppedEventArguments>()
         val initialized = CountDownLatch(1)
         val client = object : IDebugProtocolClient {

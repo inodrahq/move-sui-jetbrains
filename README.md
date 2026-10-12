@@ -25,9 +25,10 @@ Settings live under **Settings | Languages & Frameworks | Move for Sui** (sui pa
 ## Development
 
 ```sh
-./gradlew runIde          # IntelliJ IDEA sandbox (opens with examples/counter when passed as --args)
+./gradlew runIde          # IntelliJ IDEA sandbox; pass a Move package as --args="/path/to/package"
 ./gradlew runRustRover    # locally installed RustRover (/Applications/RustRover.app)
 ./gradlew test            # parser, resolve, run-config and (with sui installed) analyzer + trace-debugger integration tests
+                          # the integration tests use the sample package in src/test/testData/counter-package
 ./gradlew buildPlugin verifyPlugin
 ```
 

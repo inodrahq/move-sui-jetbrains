@@ -1,0 +1,15 @@
+.gradle/
+build/
+
+.idea/
+*.iml
+.kotlin/
+.intellijPlatform/
+local.properties
+.DS_Store
+examples/*/.idea/
+examples/*/build/
+examples/*/out/
+trace-adapter/node_modules/
+trace-adapter/package-lock.json
+examples/*/traces/

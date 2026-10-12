@@ -1,0 +1,12 @@
+{
+  "name": "move-sui-trace-adapter-bundle",
+  "private": true,
+  "description": "Bundles Mysten's Move trace debug adapter (built from the sui repo by build.sh) into a single stdio server for the Move for Sui plugin.",
+  "scripts": {
+    "build": "./build.sh"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}

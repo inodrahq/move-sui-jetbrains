@@ -1,0 +1,277 @@
+{
+  parserClass="com.inodra.movesui.lang.parser.MoveParser"
+  parserUtilClass="com.inodra.movesui.lang.parser.MoveParserUtil"
+
+  extends="com.inodra.movesui.lang.psi.ext.MvElementImpl"
+  implements="com.inodra.movesui.lang.psi.ext.MvElement"
+
+  psiClassPrefix="Mv"
+  psiImplClassSuffix="Impl"
+  psiPackage="com.inodra.movesui.lang.psi"
+  psiImplPackage="com.inodra.movesui.lang.psi.impl"
+  psiImplUtilClass="com.inodra.movesui.lang.psi.impl.MvPsiImplUtil"
+
+  elementTypeHolderClass="com.inodra.movesui.lang.psi.MoveTypes"
+  elementTypeClass="com.inodra.movesui.lang.psi.MvElementType"
+  tokenTypeClass="com.inodra.movesui.lang.psi.MvTokenType"
+
+  generateTokenAccessors=true
+  elementTypeFactory("Module|Function|Struct|Enum|EnumVariant|Const")="com.inodra.movesui.lang.stubs.MvElementTypeFactory.stubFactory"
+
+  tokens=[
+    LBRACE='{' RBRACE='}' LBRACK='[' RBRACK=']' LPAREN='(' RPAREN=')'
+    COLON=':' COLON_COLON='::' SEMICOLON=';' COMMA=',' DOT='.' DOT_DOT='..'
+    EQ='=' EQ_EQ='==' NOT_EQ='!=' LT='<' GT='>' LT_EQ='<=' LT_LT='<<'
+    GT_GT='>>' GT_EQ='>=' FAT_ARROW='=>' ARROW='->' IMPLIES='==>' IFF='<==>'
+    AND_AND='&&' OR_OR='||' AND='&' OR='|' XOR='^'
+    EXCL='!' PLUS='+' MINUS='-' MUL='*' DIV='/' PERCENT='%'
+    HASH='#' AT='@' DOLLAR='$' UNDERSCORE='_'
+
+    ABORT_KW='abort' ACQUIRES_KW='acquires' AS_KW='as' BREAK_KW='break' CONST_KW='const'
+    CONTINUE_KW='continue' COPY_KW='copy' ELSE_KW='else' FALSE_KW='false' FUN_KW='fun'
+    FRIEND_KW='friend' IF_KW='if' LET_KW='let' LOOP_KW='loop' MODULE_KW='module' MOVE_KW='move'
+    NATIVE_KW='native' PUBLIC_KW='public' RETURN_KW='return' STRUCT_KW='struct' TRUE_KW='true'
+    USE_KW='use' WHILE_KW='while' MUT_KW='mut' ENUM_KW='enum' MATCH_KW='match' TYPE_KW='type'
+    FOR_KW='for'
+    ADDRESS_KW='address' ENTRY_KW='entry' HAS_KW='has' MACRO_KW='macro' PACKAGE_KW='package'
+    PHANTOM_KW='phantom' SCRIPT_KW='script' SPEC_KW='spec'
+
+    INTEGER_LITERAL='regexp:(0[xX][0-9a-fA-F_]+|[0-9][0-9_]*)(u8|u16|u32|u64|u128|u256)?'
+    BYTE_STRING_LITERAL='regexp:b"([^"\\]|\\.)*"'
+    HEX_STRING_LITERAL='regexp:x"([^"\\]|\\.)*"'
+    STRING_LITERAL='regexp:"([^"\\]|\\.)*"'
+    IDENTIFIER='regexp:[a-zA-Z_][a-zA-Z0-9_]*'
+    SYNTAX_IDENTIFIER='regexp:\$[a-zA-Z_][a-zA-Z0-9_]*'
+    QUOTE_IDENTIFIER="regexp:'[a-zA-Z_][a-zA-Z0-9_]*"
+
+    LINE_COMMENT='regexp://.*'
+    BLOCK_COMMENT='regexp:/\*.*\*/'
+    DOC_COMMENT='regexp:///.*'
+  ]
+
+  extends(".*Expr")=Expr
+  extends(".*Pat")=Pat
+  extends(".*Type")=Type
+}
+
+File ::= TopLevelItem*
+
+private TopLevelItem ::= !<<eof>> (Module | AddressBlock | Script) { recoverWhile=TopLevelRecover }
+private TopLevelRecover ::= !(HASH | MODULE_KW | ADDRESS_KW | SCRIPT_KW)
+
+// ---------- Names ----------
+
+private Identifier ::= IDENTIFIER | ContextualKeyword
+private ContextualKeyword ::= ADDRESS_KW | ENTRY_KW | HAS_KW | MACRO_KW | PACKAGE_KW | PHANTOM_KW | SCRIPT_KW | SPEC_KW
+private BindingName ::= Identifier | SYNTAX_IDENTIFIER
+
+private Literal ::= INTEGER_LITERAL | BYTE_STRING_LITERAL | HEX_STRING_LITERAL | STRING_LITERAL | TRUE_KW | FALSE_KW
+
+// ---------- Attributes ----------
+
+Attr ::= HASH LBRACK AttrItemListInner RBRACK { pin=1 }
+private AttrItemListInner ::= (AttrItem (COMMA AttrItem)* COMMA?)?
+AttrItem ::= AttrName (EQ AttrValue | AttrItemList)?
+AttrItemList ::= LPAREN AttrItemListInner RPAREN { pin=1 }
+AttrName ::= Identifier (COLON_COLON Identifier)*
+AttrValue ::= Literal | AddressLit | Path
+AddressLit ::= AT (INTEGER_LITERAL | Identifier) { pin=1 }
+
+// ---------- Top level ----------
+
+Module ::= Attr* MODULE_KW ModulePath (ModuleBody | SEMICOLON ModuleItem*) { pin=2 mixin="com.inodra.movesui.lang.psi.ext.MvModuleMixin" stubClass="com.inodra.movesui.lang.stubs.MvModuleStub" implements="com.inodra.movesui.lang.psi.ext.MvNamedElement" }
+ModulePath ::= (AddressRef COLON_COLON)? Identifier
+AddressRef ::= INTEGER_LITERAL | Identifier
+ModuleBody ::= LBRACE ModuleItem* RBRACE { pin=1 }
+
+AddressBlock ::= Attr* ADDRESS_KW AddressRef LBRACE Module* RBRACE { pin=2 }
+Script ::= Attr* SCRIPT_KW LBRACE ModuleItem* RBRACE { pin=2 }
+
+ModuleItem ::= UseStmt | Const | Struct | Enum | Function | FriendDecl | SpecBlock { recoverWhile=ModuleItemRecover }
+private ModuleItemRecover ::= !(RBRACE | HASH | USE_KW | CONST_KW | STRUCT_KW | ENUM_KW | FUN_KW | PUBLIC_KW
+  | NATIVE_KW | ENTRY_KW | MACRO_KW | FRIEND_KW | SPEC_KW | MODULE_KW)
+
+Visibility ::= PUBLIC_KW (LPAREN (PACKAGE_KW | FRIEND_KW | SCRIPT_KW) RPAREN)? { pin=1 }
+
+// ---------- Use ----------
+
+UseStmt ::= Attr* Visibility? USE_KW (UseFun | UseSpeck) SEMICOLON { pin=USE_KW }
+UseFun ::= FUN_KW Path AS_KW UseFunTarget { pin=1 }
+UseFunTarget ::= Path DOT Identifier { pin=2 }
+UseSpeck ::= UseSpeckName (COLON_COLON (UseGroup | UseSpeck))? UseAlias? { mixin="com.inodra.movesui.lang.psi.ext.MvUseSpeckMixin" }
+UseSpeckName ::= INTEGER_LITERAL | Identifier
+UseAlias ::= AS_KW (Identifier | UNDERSCORE) { mixin="com.inodra.movesui.lang.psi.ext.MvNamedElementImpl" implements="com.inodra.movesui.lang.psi.ext.MvNamedElement" pin=1 }
+UseGroup ::= LBRACE (UseSpeck (COMMA UseSpeck)* COMMA?)? RBRACE { pin=1 }
+
+// ---------- Items ----------
+
+FriendDecl ::= Attr* FRIEND_KW Path SEMICOLON { pin=2 }
+
+SpecBlock ::= Attr* SPEC_KW <<skipSpecBlock>> { pin=2 }
+
+Const ::= Attr* Visibility? CONST_KW Identifier COLON Type EQ Expr SEMICOLON { mixin="com.inodra.movesui.lang.psi.ext.MvConstMixin" stubClass="com.inodra.movesui.lang.stubs.MvConstStub" implements="com.inodra.movesui.lang.psi.ext.MvNamedElement" pin=CONST_KW }
+
+Struct ::= Attr* Visibility? STRUCT_KW Identifier TypeParamList? StructBody { mixin="com.inodra.movesui.lang.psi.ext.MvStructMixin" stubClass="com.inodra.movesui.lang.stubs.MvStructStub" implements="com.inodra.movesui.lang.psi.ext.MvNamedElement" pin=STRUCT_KW }
+private StructBody ::= AbilityList? (NamedFieldList (AbilityList SEMICOLON)? | PositionalFieldList AbilityList? SEMICOLON? | SEMICOLON)
+AbilityList ::= HAS_KW Ability (COMMA Ability)* COMMA? { pin=1 }
+Ability ::= COPY_KW | IDENTIFIER
+NamedFieldList ::= LBRACE (NamedField (COMMA NamedField)* COMMA?)? RBRACE { pin=1 }
+NamedField ::= Attr* Identifier COLON Type { mixin="com.inodra.movesui.lang.psi.ext.MvNamedElementImpl" implements="com.inodra.movesui.lang.psi.ext.MvNamedElement" pin=COLON }
+PositionalFieldList ::= LPAREN (PositionalField (COMMA PositionalField)* COMMA?)? RPAREN { pin=1 }
+PositionalField ::= Attr* Type
+
+Enum ::= Attr* Visibility? ENUM_KW Identifier TypeParamList? AbilityList? EnumBody (AbilityList SEMICOLON)? { mixin="com.inodra.movesui.lang.psi.ext.MvEnumMixin" stubClass="com.inodra.movesui.lang.stubs.MvEnumStub" implements="com.inodra.movesui.lang.psi.ext.MvNamedElement" pin=ENUM_KW }
+EnumBody ::= LBRACE (EnumVariant (COMMA EnumVariant)* COMMA?)? RBRACE { pin=1 }
+EnumVariant ::= Attr* Identifier (NamedFieldList | PositionalFieldList)? { mixin="com.inodra.movesui.lang.psi.ext.MvEnumVariantMixin" stubClass="com.inodra.movesui.lang.stubs.MvEnumVariantStub" implements="com.inodra.movesui.lang.psi.ext.MvNamedElement" }
+
+Function ::= Attr* FunctionModifier* FUN_KW Identifier TypeParamList? FunctionParamList ReturnType? AcquiresList? (CodeBlock | SEMICOLON) { mixin="com.inodra.movesui.lang.psi.ext.MvFunctionMixin" stubClass="com.inodra.movesui.lang.stubs.MvFunctionStub" implements="com.inodra.movesui.lang.psi.ext.MvNamedElement" pin=FUN_KW }
+FunctionModifier ::= Visibility | ENTRY_KW | NATIVE_KW | MACRO_KW
+FunctionParamList ::= LPAREN (FunctionParam (COMMA FunctionParam)* COMMA?)? RPAREN { pin=1 }
+FunctionParam ::= Attr* MUT_KW? (BindingName | UNDERSCORE) COLON Type { mixin="com.inodra.movesui.lang.psi.ext.MvLocalNamedElementImpl" implements="com.inodra.movesui.lang.psi.ext.MvNamedElement" pin=COLON }
+ReturnType ::= COLON Type { pin=1 }
+AcquiresList ::= ACQUIRES_KW Path (COMMA Path)* { pin=1 }
+
+TypeParamList ::= LT (TypeParam (COMMA TypeParam)* COMMA?)? GT { pin=1 }
+TypeParam ::= PHANTOM_KW? (IDENTIFIER | SYNTAX_IDENTIFIER) (COLON AbilityBound)? { mixin="com.inodra.movesui.lang.psi.ext.MvLocalNamedElementImpl" implements="com.inodra.movesui.lang.psi.ext.MvNamedElement" }
+AbilityBound ::= Ability (PLUS Ability)*
+
+// ---------- Paths ----------
+
+Path ::= PathSegment (COLON_COLON PathSegment)*
+PathSegment ::= PathName TypeArgList? { mixin="com.inodra.movesui.lang.psi.ext.MvPathSegmentMixin" }
+private PathName ::= INTEGER_LITERAL | Identifier | SYNTAX_IDENTIFIER
+TypeArgList ::= LT (Type (COMMA Type)* COMMA?)? GT { pin=1 }
+
+// In expressions `<` only opens type arguments when it directly follows the name (`foo<T>()` vs `a < b`).
+ExprPath ::= ExprPathSegment (COLON_COLON ExprPathSegment)* { elementType=Path }
+ExprPathSegment ::= PathName (<<noWhitespaceBefore>> TypeArgList)? { elementType=PathSegment }
+
+// ---------- Types ----------
+
+Type ::= RefType | LambdaType | TupleType | WildType | PathType
+RefType ::= AND MUT_KW? Type
+LambdaType ::= (OR_OR | OR (Type (COMMA Type)* COMMA?)? OR) (ARROW Type)?
+TupleType ::= LPAREN (Type (COMMA Type)* COMMA?)? RPAREN
+WildType ::= UNDERSCORE
+PathType ::= Path
+
+// ---------- Statements ----------
+
+CodeBlock ::= LBRACE Stmt* RBRACE { pin=1 }
+Stmt ::= EmptyStmt | LetStmt | UseStmt | ExprStmt { recoverWhile=StmtRecover }
+private StmtRecover ::= !(SEMICOLON | RBRACE | LBRACE | LET_KW | USE_KW | IF_KW | WHILE_KW | LOOP_KW | MATCH_KW
+  | RETURN_KW | ABORT_KW | BREAK_KW | CONTINUE_KW | COPY_KW | MOVE_KW | TRUE_KW | FALSE_KW
+  | IDENTIFIER | SYNTAX_IDENTIFIER | QUOTE_IDENTIFIER | INTEGER_LITERAL | BYTE_STRING_LITERAL | HEX_STRING_LITERAL
+  | STRING_LITERAL | AT | LPAREN | OR | OR_OR | EXCL | MUL | AND | ContextualKeyword | HASH)
+EmptyStmt ::= SEMICOLON
+LetStmt ::= LET_KW Pat TypeAscription? LetInitializer? SEMICOLON { pin=1 }
+TypeAscription ::= COLON Type { pin=1 }
+LetInitializer ::= EQ Expr { pin=1 }
+// A tail expression is an ExprStmt without a semicolon right before `}`.
+ExprStmt ::= Expr (SEMICOLON | &RBRACE | <<afterBlockLike>>)
+
+// ---------- Expressions ----------
+
+Expr ::= AssignExpr
+  | CastExpr
+  | OrExpr
+  | AndExpr
+  | CompExpr
+  | RangeExpr
+  | BitOrExpr
+  | BitXorExpr
+  | BitAndExpr
+  | ShiftExpr
+  | AddExpr
+  | MulExpr
+  | UnaryExpr
+  | MethodCallExpr
+  | FieldExpr
+  | IndexExpr
+  | PrimaryGroup
+
+private PrimaryGroup ::= LitExpr | AddressLitExpr | VectorLitExpr | MacroCallExpr | StructLitExpr | CallExpr | PathExpr
+  | ParenExpr | TupleExpr
+  | LambdaExpr | BlockExpr | IfExpr | WhileExpr | LoopExpr | LabeledExpr | MatchExpr
+  | ReturnExpr | AbortExpr | BreakExpr | ContinueExpr
+
+AssignExpr ::= Expr EQ Expr { rightAssociative=true }
+CastExpr ::= Expr AS_KW Type
+OrExpr ::= Expr OR_OR Expr
+AndExpr ::= Expr AND_AND Expr
+CompExpr ::= Expr CompOp Expr
+private CompOp ::= EQ_EQ | NOT_EQ | LT_EQ | <<gtEq>> | LT | <<gtSingle>>
+RangeExpr ::= Expr DOT_DOT Expr
+BitOrExpr ::= Expr OR Expr
+BitXorExpr ::= Expr XOR Expr
+BitAndExpr ::= Expr AND Expr
+ShiftExpr ::= Expr ShiftOp Expr
+private ShiftOp ::= LT_LT | <<gtGt>>
+AddExpr ::= Expr AddOp Expr
+private AddOp ::= PLUS | MINUS
+MulExpr ::= Expr MulOp Expr
+private MulOp ::= MUL | DIV | PERCENT
+
+UnaryExpr ::= UnaryOp Expr
+private UnaryOp ::= EXCL | MUL | AND MUT_KW? | COPY_KW | MOVE_KW
+
+MethodCallExpr ::= Expr DOT Identifier (EXCL TypeArgList? | (<<noWhitespaceBefore>> TypeArgList)?) ValueArgList { mixin="com.inodra.movesui.lang.psi.ext.MvMethodCallExprMixin" }
+FieldExpr ::= Expr DOT (Identifier | INTEGER_LITERAL)
+IndexExpr ::= Expr IndexArgList
+IndexArgList ::= LBRACK Expr (COMMA Expr)* COMMA? RBRACK { pin=1 }
+
+LitExpr ::= Literal !COLON_COLON
+AddressLitExpr ::= AddressLit
+VectorLitExpr ::= <<vectorIdent>> TypeArgList? LBRACK (Expr (COMMA Expr)* COMMA?)? RBRACK
+MacroCallExpr ::= ExprPath EXCL TypeArgList? ValueArgList { pin=2 }
+StructLitExpr ::= ExprPath StructLitFieldList
+StructLitFieldList ::= LBRACE (StructLitField (COMMA StructLitField)* COMMA?)? RBRACE { pin=1 }
+StructLitField ::= Identifier (COLON Expr)? { mixin="com.inodra.movesui.lang.psi.ext.MvStructLitFieldMixin" }
+CallExpr ::= ExprPath ValueArgList
+PathExpr ::= ExprPath
+ValueArgList ::= LPAREN (Expr (COMMA Expr)* COMMA?)? RPAREN { pin=1 }
+
+// Grammar-Kit pins prefix rules on their first token, so `(` forms are kept as atoms via a private body rule.
+ParenExpr ::= LPAREN ParenExprBody RPAREN
+private ParenExprBody ::= Expr TypeAscription?
+TupleExpr ::= LPAREN (Expr (COMMA Expr)* COMMA?)? RPAREN
+
+LambdaExpr ::= LambdaParamList (ARROW Type)? Expr
+LambdaParamList ::= OR_OR | OR (LambdaParam (COMMA LambdaParam)* COMMA?)? OR
+LambdaParam ::= Pat TypeAscription?
+
+BlockExpr ::= CodeBlock
+IfExpr ::= IF_KW Condition Expr ElseBranch? { pin=1 }
+ElseBranch ::= ELSE_KW Expr { pin=1 }
+Condition ::= LPAREN Expr RPAREN { pin=1 }
+WhileExpr ::= WHILE_KW Condition Expr { pin=1 }
+LoopExpr ::= LOOP_KW Expr { pin=1 }
+LabeledExpr ::= Label COLON Expr { pin=2 }
+Label ::= QUOTE_IDENTIFIER { mixin="com.inodra.movesui.lang.psi.ext.MvLabelMixin" implements="com.inodra.movesui.lang.psi.ext.MvNamedElement" }
+MatchExpr ::= MATCH_KW Condition MatchBody { pin=1 }
+MatchBody ::= LBRACE (MatchArm (COMMA? MatchArm)* COMMA?)? RBRACE { pin=1 }
+MatchArm ::= (OrPat | Pat) MatchGuard? FAT_ARROW Expr { pin=FAT_ARROW }
+MatchGuard ::= IF_KW Expr { pin=1 }
+
+ReturnExpr ::= RETURN_KW Label? Expr? { pin=1 }
+AbortExpr ::= ABORT_KW Expr? { pin=1 }
+BreakExpr ::= BREAK_KW Label? Expr? { pin=1 }
+ContinueExpr ::= CONTINUE_KW Label? { pin=1 }
+
+// ---------- Patterns ----------
+
+Pat ::= WildPat | TuplePat | LitPat | StructPat | TupleStructPat | BindingPat | PathPat
+
+// Only match arms allow `|` alternatives; lambda parameters must not consume the closing bar.
+OrPat ::= Pat (OR Pat)+
+WildPat ::= UNDERSCORE
+TuplePat ::= LPAREN (Pat (COMMA Pat)* COMMA?)? RPAREN
+LitPat ::= Literal
+StructPat ::= Path StructPatFieldList
+StructPatFieldList ::= LBRACE ((StructPatField | PatRest) (COMMA (StructPatField | PatRest))* COMMA?)? RBRACE { pin=1 }
+StructPatField ::= MUT_KW? Identifier (COLON Pat)? { mixin="com.inodra.movesui.lang.psi.ext.MvStructPatFieldMixin" implements="com.inodra.movesui.lang.psi.ext.MvNamedElement" }
+TupleStructPat ::= Path TupleStructPatList
+TupleStructPatList ::= LPAREN ((Pat | PatRest) (COMMA (Pat | PatRest))* COMMA?)? RPAREN { pin=1 }
+PatRest ::= DOT_DOT
+BindingPat ::= MUT_KW? BindingName !COLON_COLON (AT Pat)? { mixin="com.inodra.movesui.lang.psi.ext.MvLocalNamedElementImpl" implements="com.inodra.movesui.lang.psi.ext.MvNamedElement" }
+PathPat ::= Path

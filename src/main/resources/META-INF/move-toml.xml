@@ -1,0 +1,14 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <completion.contributor language="TOML" implementationClass="com.inodra.movesui.toml.MoveTomlCompletionContributor"/>
+        <psi.referenceContributor language="TOML" implementation="com.inodra.movesui.toml.MoveTomlReferenceContributor"/>
+        <localInspection language="TOML" groupName="Move" displayName="Move.toml problems" shortName="MoveTomlProblems" enabledByDefault="true" level="WARNING"
+                         implementationClass="com.inodra.movesui.toml.MoveTomlInspection"/>
+        <platform.backend.documentation.targetProvider implementation="com.inodra.movesui.toml.MvrDocumentationTargetProvider"/>
+    </extensions>
+    <actions>
+        <action id="MoveSui.AddMvrDependency" class="com.inodra.movesui.toml.AddMvrDependencyAction" text="Add MVR Dependency…" description="Search the Move Registry and add a dependency to Move.toml">
+            <add-to-group group-id="MoveSui.ToolsMenu" anchor="after" relative-to-action="MoveSui.UpdateDeps"/>
+        </action>
+    </actions>
+</idea-plugin>

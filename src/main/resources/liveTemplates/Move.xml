@@ -1,0 +1,85 @@
+<templateSet group="Move">
+  <template name="module" value="module $PACKAGE$::$NAME$;&#10;&#10;$END$" description="Module declaration" toReformat="true" toShortenFQNames="false">
+    <variable name="PACKAGE" expression="" defaultValue="&quot;package&quot;" alwaysStopAt="true"/>
+    <variable name="NAME" expression="fileNameWithoutExtension()" defaultValue="" alwaysStopAt="true"/>
+    <context><option name="MOVE_FILE" value="true"/></context>
+  </template>
+  <template name="fun" value="fun $NAME$($PARAMS$)$RET$ {&#10;    $END$&#10;}" description="Private function" toReformat="true" toShortenFQNames="false">
+    <variable name="NAME" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
+    <variable name="PARAMS" expression="" defaultValue="" alwaysStopAt="true"/>
+    <variable name="RET" expression="" defaultValue="" alwaysStopAt="true"/>
+    <context><option name="MOVE_MODULE" value="true"/></context>
+  </template>
+  <template name="pfun" value="public fun $NAME$($PARAMS$)$RET$ {&#10;    $END$&#10;}" description="Public function" toReformat="true" toShortenFQNames="false">
+    <variable name="NAME" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
+    <variable name="PARAMS" expression="" defaultValue="" alwaysStopAt="true"/>
+    <variable name="RET" expression="" defaultValue="" alwaysStopAt="true"/>
+    <context><option name="MOVE_MODULE" value="true"/></context>
+  </template>
+  <template name="ppfun" value="public(package) fun $NAME$($PARAMS$)$RET$ {&#10;    $END$&#10;}" description="Package-visible function" toReformat="true" toShortenFQNames="false">
+    <variable name="NAME" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
+    <variable name="PARAMS" expression="" defaultValue="" alwaysStopAt="true"/>
+    <variable name="RET" expression="" defaultValue="" alwaysStopAt="true"/>
+    <context><option name="MOVE_MODULE" value="true"/></context>
+  </template>
+  <template name="entry" value="entry fun $NAME$($PARAMS$ctx: &amp;mut TxContext) {&#10;    $END$&#10;}" description="Entry function" toReformat="true" toShortenFQNames="false">
+    <variable name="NAME" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
+    <variable name="PARAMS" expression="" defaultValue="" alwaysStopAt="true"/>
+    <context><option name="MOVE_MODULE" value="true"/></context>
+  </template>
+  <template name="init" value="fun init($OTW$ctx: &amp;mut TxContext) {&#10;    $END$&#10;}" description="Module initializer" toReformat="true" toShortenFQNames="false">
+    <variable name="OTW" expression="" defaultValue="" alwaysStopAt="true"/>
+    <context><option name="MOVE_MODULE" value="true"/></context>
+  </template>
+  <template name="struct" value="public struct $NAME$ has $ABILITIES$ {&#10;    $END$&#10;}" description="Struct" toReformat="true" toShortenFQNames="false">
+    <variable name="NAME" expression="" defaultValue="&quot;Name&quot;" alwaysStopAt="true"/>
+    <variable name="ABILITIES" expression="" defaultValue="&quot;copy, drop&quot;" alwaysStopAt="true"/>
+    <context><option name="MOVE_MODULE" value="true"/></context>
+  </template>
+  <template name="object" value="public struct $NAME$ has key {&#10;    id: UID,&#10;    $END$&#10;}" description="Object struct (key ability with UID)" toReformat="true" toShortenFQNames="false">
+    <variable name="NAME" expression="" defaultValue="&quot;Name&quot;" alwaysStopAt="true"/>
+    <context><option name="MOVE_MODULE" value="true"/></context>
+  </template>
+  <template name="enum" value="public enum $NAME$ has $ABILITIES$ {&#10;    $END$&#10;}" description="Enum" toReformat="true" toShortenFQNames="false">
+    <variable name="NAME" expression="" defaultValue="&quot;Name&quot;" alwaysStopAt="true"/>
+    <variable name="ABILITIES" expression="" defaultValue="&quot;copy, drop&quot;" alwaysStopAt="true"/>
+    <context><option name="MOVE_MODULE" value="true"/></context>
+  </template>
+  <template name="const" value="const $NAME$: $TYPE$ = $VALUE$;" description="Constant" toReformat="true" toShortenFQNames="false">
+    <variable name="NAME" expression="" defaultValue="&quot;EName&quot;" alwaysStopAt="true"/>
+    <variable name="TYPE" expression="" defaultValue="&quot;u64&quot;" alwaysStopAt="true"/>
+    <variable name="VALUE" expression="" defaultValue="&quot;0&quot;" alwaysStopAt="true"/>
+    <context><option name="MOVE_MODULE" value="true"/></context>
+  </template>
+  <template name="test" value="#[test]&#10;fun test_$NAME$() {&#10;    $END$&#10;}" description="Unit test" toReformat="true" toShortenFQNames="false">
+    <variable name="NAME" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
+    <context><option name="MOVE_MODULE" value="true"/></context>
+  </template>
+  <template name="testfail" value="#[test, expected_failure(abort_code = $CODE$)]&#10;fun test_$NAME$() {&#10;    $END$&#10;}" description="Unit test expecting an abort" toReformat="true" toShortenFQNames="false">
+    <variable name="CODE" expression="" defaultValue="" alwaysStopAt="true"/>
+    <variable name="NAME" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
+    <context><option name="MOVE_MODULE" value="true"/></context>
+  </template>
+  <template name="scenario" value="let mut scenario = test_scenario::begin($SENDER$);&#10;$END$&#10;scenario.end();" description="Test scenario skeleton" toReformat="true" toShortenFQNames="false">
+    <variable name="SENDER" expression="" defaultValue="&quot;@0xA&quot;" alwaysStopAt="true"/>
+    <context><option name="MOVE_BLOCK" value="true"/></context>
+  </template>
+  <template name="assert" value="assert!($COND$, $CODE$);" description="Assertion with abort code" toReformat="true" toShortenFQNames="false">
+    <variable name="COND" expression="" defaultValue="" alwaysStopAt="true"/>
+    <variable name="CODE" expression="" defaultValue="" alwaysStopAt="true"/>
+    <context><option name="MOVE_BLOCK" value="true"/></context>
+  </template>
+  <template name="match" value="match ($EXPR$) {&#10;    $END$&#10;}" description="Match expression" toReformat="true" toShortenFQNames="false">
+    <variable name="EXPR" expression="" defaultValue="" alwaysStopAt="true"/>
+    <context><option name="MOVE_BLOCK" value="true"/></context>
+  </template>
+  <template name="while" value="while ($COND$) {&#10;    $END$&#10;}" description="While loop" toReformat="true" toShortenFQNames="false">
+    <variable name="COND" expression="" defaultValue="" alwaysStopAt="true"/>
+    <context><option name="MOVE_BLOCK" value="true"/></context>
+  </template>
+  <template name="letm" value="let mut $NAME$ = $VALUE$;" description="Mutable binding" toReformat="true" toShortenFQNames="false">
+    <variable name="NAME" expression="" defaultValue="" alwaysStopAt="true"/>
+    <variable name="VALUE" expression="" defaultValue="" alwaysStopAt="true"/>
+    <context><option name="MOVE_BLOCK" value="true"/></context>
+  </template>
+</templateSet>

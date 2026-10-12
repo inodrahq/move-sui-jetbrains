@@ -1,0 +1,88 @@
+<idea-plugin>
+    <id>com.inodra.move-sui</id>
+    <name>Move for Sui</name>
+    <vendor url="https://inodra.com">Inodra</vendor>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lsp</depends>
+    <depends>com.intellij.modules.xdebugger</depends>
+    <depends optional="true" config-file="move-toml.xml">org.toml.lang</depends>
+
+    <resource-bundle>messages.MoveBundle</resource-bundle>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType name="Move" language="Move" extensions="move" fieldName="INSTANCE"
+                  implementationClass="com.inodra.movesui.lang.MoveFileType"/>
+        <lang.parserDefinition language="Move" implementationClass="com.inodra.movesui.lang.parser.MoveParserDefinition"/>
+        <stubElementTypeHolder class="com.inodra.movesui.lang.psi.MoveTypes" externalIdPrefix="move."/>
+        <stubIndex implementation="com.inodra.movesui.lang.stubs.index.MvNamedElementIndex"/>
+        <stubIndex implementation="com.inodra.movesui.lang.stubs.index.MvModuleIndex"/>
+        <lang.syntaxHighlighterFactory language="Move" implementationClass="com.inodra.movesui.ide.highlight.MoveSyntaxHighlighterFactory"/>
+        <colorSettingsPage implementation="com.inodra.movesui.ide.highlight.MoveColorSettingsPage"/>
+        <annotator language="Move" implementationClass="com.inodra.movesui.ide.annotator.MoveHighlightingAnnotator"/>
+
+        <lang.braceMatcher language="Move" implementationClass="com.inodra.movesui.ide.editor.MoveBraceMatcher"/>
+        <lang.commenter language="Move" implementationClass="com.inodra.movesui.ide.editor.MoveCommenter"/>
+        <lang.quoteHandler language="Move" implementationClass="com.inodra.movesui.ide.editor.MoveQuoteHandler"/>
+        <lang.foldingBuilder language="Move" implementationClass="com.inodra.movesui.ide.folding.MoveFoldingBuilder"/>
+        <lang.psiStructureViewFactory language="Move" implementationClass="com.inodra.movesui.ide.structure.MoveStructureViewFactory"/>
+        <breadcrumbsInfoProvider implementation="com.inodra.movesui.ide.MoveBreadcrumbsProvider"/>
+        <completion.contributor language="Move" implementationClass="com.inodra.movesui.ide.completion.MoveCompletionContributor"/>
+        <localInspection language="Move" groupName="Move" displayName="Unused import" shortName="MoveUnusedImport" enabledByDefault="true" level="WARNING"
+                         implementationClass="com.inodra.movesui.ide.inspections.MoveUnusedImportInspection"/>
+        <localInspection language="Move" groupName="Move" displayName="Unresolved reference (analyzer offline)" shortName="MoveUnresolvedReference" enabledByDefault="true" level="WEAK WARNING"
+                         implementationClass="com.inodra.movesui.ide.inspections.MoveUnresolvedReferenceInspection"/>
+        <localInspection language="Move" groupName="Move" displayName="Object struct without 'id: UID'" shortName="MoveKeyStructId" enabledByDefault="true" level="ERROR"
+                         implementationClass="com.inodra.movesui.ide.inspections.MoveKeyStructIdInspection"/>
+        <localInspection language="Move" groupName="Move" displayName="Unknown named address in use path" shortName="MoveUnknownAddress" enabledByDefault="true" level="WEAK WARNING"
+                         implementationClass="com.inodra.movesui.ide.inspections.MoveUnknownAddressInspection"/>
+        <lang.findUsagesProvider language="Move" implementationClass="com.inodra.movesui.ide.usages.MoveFindUsagesProvider"/>
+        <gotoSymbolContributor implementation="com.inodra.movesui.ide.navigation.MoveGotoSymbolContributor"/>
+        <gotoClassContributor implementation="com.inodra.movesui.ide.navigation.MoveGotoClassContributor"/>
+        <platform.backend.documentation.psiTargetProvider implementation="com.inodra.movesui.ide.docs.MoveDocumentationTargetProvider"/>
+
+        <defaultLiveTemplates file="/liveTemplates/Move.xml"/>
+        <liveTemplateContext contextId="MOVE_FILE" implementation="com.inodra.movesui.ide.templates.MoveTemplateContextType$File"/>
+        <liveTemplateContext contextId="MOVE_MODULE" baseContextId="MOVE_FILE" implementation="com.inodra.movesui.ide.templates.MoveTemplateContextType$Module"/>
+        <liveTemplateContext contextId="MOVE_BLOCK" baseContextId="MOVE_FILE" implementation="com.inodra.movesui.ide.templates.MoveTemplateContextType$Block"/>
+        <internalFileTemplate name="Move Module"/>
+        <internalFileTemplate name="Move Test Module"/>
+
+        <platform.lsp.integrationProvider implementation="com.inodra.movesui.lsp.MoveLspIntegrationProvider"/>
+        <applicationConfigurable parentId="language" id="com.inodra.movesui.settings" displayName="Move for Sui"
+                                 instance="com.inodra.movesui.toolchain.MoveSettingsConfigurable"/>
+        <notificationGroup id="Move for Sui" displayType="BALLOON"/>
+        <externalAnnotator language="Move" implementationClass="com.inodra.movesui.ide.annotator.MoveCompilerAnnotator"/>
+        <formattingService implementation="com.inodra.movesui.ide.formatting.MoveFormattingService"/>
+        <xdebugger.breakpointType implementation="com.inodra.movesui.debug.MoveLineBreakpointType"/>
+        <programRunner implementation="com.inodra.movesui.debug.MoveDebugRunner"/>
+        <configurationType implementation="com.inodra.movesui.run.MoveRunConfigurationType"/>
+        <runConfigurationProducer implementation="com.inodra.movesui.run.MoveTestRunConfigurationProducer"/>
+        <runConfigurationProducer implementation="com.inodra.movesui.run.MoveBuildRunConfigurationProducer"/>
+        <runLineMarkerContributor language="Move" implementationClass="com.inodra.movesui.run.MoveRunLineMarkerContributor"/>
+        <directoryProjectGenerator implementation="com.inodra.movesui.wizard.MoveProjectGenerator"/>
+        <moduleBuilder builderClass="com.inodra.movesui.wizard.MoveModuleBuilder" id="MOVE_SUI_MODULE" order="last"/>
+        <additionalLibraryRootsProvider implementation="com.inodra.movesui.project.MoveLibraryRootsProvider"/>
+        <vfs.asyncListener implementation="com.inodra.movesui.project.MoveManifestChangeListener"/>
+    </extensions>
+
+    <applicationListeners>
+        <listener class="com.inodra.movesui.lsp.MoveLspSettingsListener" topic="com.inodra.movesui.toolchain.MoveSettings$Listener"/>
+    </applicationListeners>
+
+    <actions>
+        <group id="MoveSui.ToolsMenu" text="Sui Move" popup="true" icon="/icons/sui.svg">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <action id="MoveSui.Build" class="com.inodra.movesui.actions.MoveBuildPackageAction" text="Build Package" description="Run sui move build"/>
+            <action id="MoveSui.Test" class="com.inodra.movesui.actions.MoveTestPackageAction" text="Test Package" description="Run sui move test"/>
+            <action id="MoveSui.Lint" class="com.inodra.movesui.actions.MoveLintPackageAction" text="Lint Package" description="Run sui move build --lint"/>
+            <action id="MoveSui.UpdateDeps" class="com.inodra.movesui.actions.MoveUpdateDepsAction" text="Update Dependencies" description="Run sui move update-deps"/>
+            <separator/>
+            <action id="MoveSui.RestartAnalyzer" class="com.inodra.movesui.lsp.RestartMoveAnalyzerAction"
+                    text="Restart Move Analyzer" description="Restart the Sui Move language server"/>
+        </group>
+        <action id="MoveSui.NewModule" class="com.inodra.movesui.actions.NewMoveModuleAction" text="Move Module" description="Create a new Move module file">
+            <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
+        </action>
+    </actions>
+</idea-plugin>

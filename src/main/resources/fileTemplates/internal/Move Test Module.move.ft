@@ -1,0 +1,6 @@
+#[test_only]
+module ${PACKAGE_NAME}::${NAME};
+
+#[test]
+fun test_${NAME}() {
+}

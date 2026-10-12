@@ -1,0 +1,2 @@
+module ${PACKAGE_NAME}::${NAME};
+
